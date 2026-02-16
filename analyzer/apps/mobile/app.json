@@ -2,6 +2,7 @@
   "expo": {
     "name": "analyzer-mobile",
     "slug": "analyzer-mobile",
+    "jsEngine": "jsc",
     "scheme": "analyzer",
     "version": "1.0.0",
     "orientation": "portrait",
