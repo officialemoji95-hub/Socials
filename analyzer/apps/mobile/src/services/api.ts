@@ -2,6 +2,16 @@ import Constants from 'expo-constants';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? Constants.expoConfig?.extra?.apiBaseUrl;
 
+type Platform = 'instagram' | 'tiktok';
+
+interface CreateAccountPayload {
+  user_id: string;
+  platform: Platform;
+  platform_account_id: string;
+  username?: string;
+  access_token?: string;
+}
+
 const request = async <T>(path: string, options?: RequestInit): Promise<T> => {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     headers: {
@@ -20,5 +30,6 @@ const request = async <T>(path: string, options?: RequestInit): Promise<T> => {
 
 export const api = {
   getAccounts: () => request<any[]>('/accounts'),
+  createAccount: (payload: CreateAccountPayload) => request('/accounts', { method: 'POST', body: JSON.stringify(payload) }),
   runInviteCampaign: () => request<{ total: number; eligible: number; queued: number; skipped: number }>('/campaigns/invite', { method: 'POST', body: JSON.stringify({}) })
 };
