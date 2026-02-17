@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { api } from '../services/api';
 
 const uuidHint = '00000000-0000-0000-0000-000000000000';
+
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export const LoginScreen = () => {
@@ -16,11 +17,16 @@ export const LoginScreen = () => {
   const [saving, setSaving] = useState(false);
 
   const onSaveTokens = async () => {
+
     const normalizedUserId = userId.trim();
     if (!normalizedUserId) {
+
+    if (!userId.trim()) {
+
       Alert.alert('Missing user ID', 'Please paste a valid user UUID before saving tokens.');
       return;
     }
+
 
     if (!uuidRegex.test(normalizedUserId)) {
       Alert.alert('Invalid user ID', 'User ID must be a valid UUID.');
@@ -71,6 +77,38 @@ export const LoginScreen = () => {
       );
     }
 
+
+
+    const tasks: Array<Promise<unknown>> = [];
+
+    if (instagramAccountId.trim() || instagramToken.trim()) {
+      tasks.push(
+        api.createAccount({
+          user_id: userId.trim(),
+          platform: 'instagram',
+          platform_account_id: instagramAccountId.trim() || instagramUsername.trim() || `ig-${Date.now()}`,
+          username: instagramUsername.trim() || undefined,
+          access_token: instagramToken.trim() || undefined
+        })
+      );
+    }
+
+    if (tiktokAccountId.trim() || tiktokToken.trim()) {
+      tasks.push(
+        api.createAccount({
+          user_id: userId.trim(),
+          platform: 'tiktok',
+          platform_account_id: tiktokAccountId.trim() || tiktokUsername.trim() || `tt-${Date.now()}`,
+          username: tiktokUsername.trim() || undefined,
+          access_token: tiktokToken.trim() || undefined
+        })
+      );
+    }
+
+    if (tasks.length === 0) {
+      Alert.alert('Nothing to save', 'Enter at least one account ID or token.');
+      return;
+    }
 
     setSaving(true);
     try {

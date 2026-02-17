@@ -12,6 +12,7 @@ interface CreateAccountPayload {
   access_token?: string;
 }
 
+
 interface AccountRecord {
   id: string;
   user_id: string;
@@ -25,6 +26,7 @@ interface AccountRecord {
   created_at: string;
   updated_at: string;
 }
+
 
 const request = async <T>(path: string, options?: RequestInit): Promise<T> => {
   const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -44,7 +46,11 @@ const request = async <T>(path: string, options?: RequestInit): Promise<T> => {
 
 export const api = {
   getAccounts: () => request<any[]>('/accounts'),
+
   createAccount: (payload: CreateAccountPayload) =>
     request<AccountRecord>('/accounts', { method: 'POST', body: JSON.stringify(payload) }),
+
+  createAccount: (payload: CreateAccountPayload) => request('/accounts', { method: 'POST', body: JSON.stringify(payload) }),
+
   runInviteCampaign: () => request<{ total: number; eligible: number; queued: number; skipped: number }>('/campaigns/invite', { method: 'POST', body: JSON.stringify({}) })
 };
