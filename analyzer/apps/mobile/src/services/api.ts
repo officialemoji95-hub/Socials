@@ -12,6 +12,22 @@ interface CreateAccountPayload {
   access_token?: string;
 }
 
+
+interface AccountRecord {
+  id: string;
+  user_id: string;
+  platform: Platform;
+  platform_account_id: string;
+  username: string | null;
+  access_token: string | null;
+  refresh_token: string | null;
+  token_expires_at: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+
 const request = async <T>(path: string, options?: RequestInit): Promise<T> => {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     headers: {
@@ -30,6 +46,11 @@ const request = async <T>(path: string, options?: RequestInit): Promise<T> => {
 
 export const api = {
   getAccounts: () => request<any[]>('/accounts'),
+
+  createAccount: (payload: CreateAccountPayload) =>
+    request<AccountRecord>('/accounts', { method: 'POST', body: JSON.stringify(payload) }),
+
   createAccount: (payload: CreateAccountPayload) => request('/accounts', { method: 'POST', body: JSON.stringify(payload) }),
+
   runInviteCampaign: () => request<{ total: number; eligible: number; queued: number; skipped: number }>('/campaigns/invite', { method: 'POST', body: JSON.stringify({}) })
 };

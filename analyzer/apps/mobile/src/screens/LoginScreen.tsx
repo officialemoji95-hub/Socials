@@ -4,6 +4,8 @@ import { api } from '../services/api';
 
 const uuidHint = '00000000-0000-0000-0000-000000000000';
 
+const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export const LoginScreen = () => {
   const [userId, setUserId] = useState('');
   const [instagramAccountId, setInstagramAccountId] = useState('');
@@ -15,10 +17,67 @@ export const LoginScreen = () => {
   const [saving, setSaving] = useState(false);
 
   const onSaveTokens = async () => {
+
+    const normalizedUserId = userId.trim();
+    if (!normalizedUserId) {
+
     if (!userId.trim()) {
+
       Alert.alert('Missing user ID', 'Please paste a valid user UUID before saving tokens.');
       return;
     }
+
+
+    if (!uuidRegex.test(normalizedUserId)) {
+      Alert.alert('Invalid user ID', 'User ID must be a valid UUID.');
+      return;
+    }
+
+    const hasInstagramInput = instagramAccountId.trim() || instagramUsername.trim() || instagramToken.trim();
+    const hasTikTokInput = tiktokAccountId.trim() || tiktokUsername.trim() || tiktokToken.trim();
+
+    if (!hasInstagramInput && !hasTikTokInput) {
+      Alert.alert('Nothing to save', 'Enter at least one account ID or token.');
+      return;
+    }
+
+    if (hasInstagramInput && !instagramAccountId.trim()) {
+      Alert.alert('Missing Instagram account ID', 'Please provide the Instagram account ID before saving.');
+      return;
+    }
+
+    if (hasTikTokInput && !tiktokAccountId.trim()) {
+      Alert.alert('Missing TikTok account ID', 'Please provide the TikTok account ID before saving.');
+      return;
+    }
+
+    const tasks: Array<Promise<unknown>> = [];
+
+    if (hasInstagramInput) {
+      tasks.push(
+        api.createAccount({
+          user_id: normalizedUserId,
+          platform: 'instagram',
+          platform_account_id: instagramAccountId.trim(),
+          username: instagramUsername.trim() || undefined,
+          access_token: instagramToken.trim() || undefined
+        })
+      );
+    }
+
+    if (hasTikTokInput) {
+      tasks.push(
+        api.createAccount({
+          user_id: normalizedUserId,
+          platform: 'tiktok',
+          platform_account_id: tiktokAccountId.trim(),
+          username: tiktokUsername.trim() || undefined,
+          access_token: tiktokToken.trim() || undefined
+        })
+      );
+    }
+
+
 
     const tasks: Array<Promise<unknown>> = [];
 
