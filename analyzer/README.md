@@ -176,6 +176,7 @@ end $$;
 - `POST /poll/tiktok`
 - `POST /campaigns/invite`
 - `POST /channels/import`
+- `GET /contacts`
 
 ### Scheduler
 

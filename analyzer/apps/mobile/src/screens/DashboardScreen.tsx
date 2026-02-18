@@ -1,8 +1,11 @@
 import { useCallback, useState } from 'react';
-import { FlatList, RefreshControl, Text, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { api } from '../services/api';
 import { ConnectedAccount } from '../types';
+import { AppCard } from '../components/ui/AppCard';
+import { AppScreen } from '../components/ui/AppScreen';
+import { colors, spacing } from '../theme/tokens';
 
 export const DashboardScreen = () => {
   const [accounts, setAccounts] = useState<ConnectedAccount[]>([]);
@@ -16,7 +19,7 @@ export const DashboardScreen = () => {
         id: item.id,
         platform: item.platform,
         username: item.username ?? item.platform_account_id,
-        lastDetectedPost: item.metadata?.lastDetectedPost ?? 'No post detected'
+        lastDetectedPost: String(item.metadata?.lastDetectedPost ?? 'No post detected')
       }));
       setAccounts(mapped);
     } finally {
@@ -31,20 +34,45 @@ export const DashboardScreen = () => {
   );
 
   return (
-    <FlatList
-      contentContainerStyle={{ padding: 16, gap: 12 }}
-      data={accounts}
-      keyExtractor={(item) => item.id}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadAccounts} />}
-      ListHeaderComponent={<Text style={{ fontSize: 24, fontWeight: '700' }}>Dashboard</Text>}
-      ListEmptyComponent={<Text style={{ color: '#6B7280' }}>No connected accounts yet.</Text>}
-      renderItem={({ item }) => (
-        <View style={{ borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 10, padding: 12 }}>
-          <Text style={{ fontWeight: '700', textTransform: 'capitalize' }}>{item.platform}</Text>
-          <Text>@{item.username}</Text>
-          <Text style={{ color: '#374151', marginTop: 4 }}>Last detected post: {item.lastDetectedPost}</Text>
-        </View>
-      )}
-    />
+    <AppScreen title="Dashboard">
+      <FlatList
+        contentContainerStyle={styles.list}
+        data={accounts}
+        keyExtractor={(item) => item.id}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadAccounts} tintColor={colors.textPrimary} />}
+        ListEmptyComponent={<Text style={styles.empty}>No connected accounts yet.</Text>}
+        renderItem={({ item }) => (
+          <AppCard>
+            <Text style={styles.platform}>{item.platform}</Text>
+            <Text style={styles.username}>@{item.username}</Text>
+            <Text style={styles.subtle}>Last detected post: {item.lastDetectedPost}</Text>
+          </AppCard>
+        )}
+      />
+    </AppScreen>
   );
 };
+
+const styles = StyleSheet.create({
+  list: {
+    gap: spacing.sm,
+    paddingBottom: spacing.xl
+  },
+  empty: {
+    color: colors.textSecondary,
+    marginTop: spacing.md
+  },
+  platform: {
+    color: colors.textPrimary,
+    fontWeight: '800',
+    textTransform: 'capitalize'
+  },
+  username: {
+    color: colors.textPrimary,
+    fontWeight: '600'
+  },
+  subtle: {
+    color: colors.textSecondary,
+    marginTop: 4
+  }
+});

@@ -2,6 +2,7 @@ import cors from 'cors';
 import express from 'express';
 import { accountRouter } from './routes/accountRoutes';
 import { campaignRouter } from './routes/campaignRoutes';
+import { contactRouter } from './routes/contactRoutes';
 import { channelRouter } from './routes/channelRoutes';
 import { healthRouter } from './routes/healthRoutes';
 import { pollRouter } from './routes/pollRoutes';
@@ -18,6 +19,7 @@ export const createApp = () => {
   app.use('/poll', pollRouter);
   app.use('/campaigns', campaignRouter);
   app.use('/channels', channelRouter);
+  app.use('/contacts', contactRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

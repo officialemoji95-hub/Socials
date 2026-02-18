@@ -1,47 +1,97 @@
-import { useMemo, useState } from 'react';
-import { FlatList, Text, TextInput, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { StateBadge } from '../components/StateBadge';
 import { Contact } from '../types';
-
-const mockContacts: Contact[] = [
-  { id: '1', display_name: 'Alex Harper', platform_contact_id: 'ig_101', state: 'opted_in' },
-  { id: '2', display_name: 'Jamie Lin', platform_contact_id: 'ig_102', state: 'invited' },
-  { id: '3', display_name: 'Priya Singh', platform_contact_id: 'tt_202', state: 'joined' },
-  { id: '4', display_name: 'Noah Kim', platform_contact_id: 'ig_103', state: 'skipped' }
-];
+import { api } from '../services/api';
+import { AppScreen } from '../components/ui/AppScreen';
+import { AppInput } from '../components/ui/AppInput';
+import { colors, spacing } from '../theme/tokens';
 
 export const ContactsScreen = () => {
   const [search, setSearch] = useState('');
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
+
+  const loadContacts = async () => {
+    setRefreshing(true);
+    setError('');
+    try {
+      const next = await api.getContacts();
+      setContacts(next);
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Failed to load contacts.');
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadContacts();
+    }, [])
+  );
 
   const filtered = useMemo(() => {
     const normalized = search.trim().toLowerCase();
-    if (!normalized) return mockContacts;
-    return mockContacts.filter((item) => item.display_name.toLowerCase().includes(normalized));
-  }, [search]);
+    if (!normalized) return contacts;
+    return contacts.filter((item) => item.display_name.toLowerCase().includes(normalized));
+  }, [search, contacts]);
 
   return (
-    <View style={{ flex: 1, padding: 16, gap: 12 }}>
-      <Text style={{ fontSize: 24, fontWeight: '700' }}>Contacts</Text>
-      <TextInput
-        value={search}
-        onChangeText={setSearch}
-        placeholder="Search contacts"
-        style={{ borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 8, padding: 12 }}
-      />
+    <AppScreen title="Contacts">
+      <AppInput value={search} onChangeText={setSearch} placeholder="Search contacts" autoCapitalize="none" />
+      {error ? <Text style={styles.error}>{error}</Text> : null}
       <FlatList
         data={filtered}
         keyExtractor={(item) => item.id}
-        ListEmptyComponent={<Text>No contacts match your search.</Text>}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadContacts} tintColor={colors.textPrimary} />}
+        ListEmptyComponent={<Text style={styles.empty}>{refreshing ? 'Loading contacts…' : 'No contacts found.'}</Text>}
+        contentContainerStyle={styles.list}
         renderItem={({ item }) => (
-          <View style={{ paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F3F4F6', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <View style={styles.row}>
             <View>
-              <Text style={{ fontWeight: '600' }}>{item.display_name}</Text>
-              <Text style={{ color: '#6B7280' }}>{item.platform_contact_id}</Text>
+              <Text style={styles.name}>{item.display_name}</Text>
+              <Text style={styles.meta}>{item.platform_contact_id}</Text>
             </View>
             <StateBadge state={item.state} />
           </View>
         )}
       />
-    </View>
+    </AppScreen>
   );
 };
+
+const styles = StyleSheet.create({
+  list: {
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xl,
+    gap: spacing.sm
+  },
+  row: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 14,
+    padding: spacing.md,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  name: {
+    color: colors.textPrimary,
+    fontWeight: '700'
+  },
+  meta: {
+    color: colors.textSecondary,
+    marginTop: 4
+  },
+  error: {
+    color: colors.danger
+  },
+  empty: {
+    color: colors.textSecondary,
+    marginTop: spacing.md
+  }
+});
