@@ -13,7 +13,12 @@ interface CreateAccountPayload {
   access_token?: string;
 }
 
+
 export interface AccountRecord {
+
+
+interface AccountRecord {
+
   id: string;
   user_id: string;
   platform: Platform;
@@ -27,12 +32,15 @@ export interface AccountRecord {
   updated_at: string;
 }
 
+
 interface ApiContact {
   id: string;
   display_name: string | null;
   platform_contact_id: string;
   state: ContactState;
 }
+
+
 
 const request = async <T>(path: string, options?: RequestInit): Promise<T> => {
   const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -51,6 +59,7 @@ const request = async <T>(path: string, options?: RequestInit): Promise<T> => {
 };
 
 export const api = {
+
   getAccounts: () => request<AccountRecord[]>('/accounts'),
   createAccount: (payload: CreateAccountPayload) => request<AccountRecord>('/accounts', { method: 'POST', body: JSON.stringify(payload) }),
   getContacts: async (): Promise<Contact[]> => {
@@ -62,5 +71,14 @@ export const api = {
       state: contact.state
     }));
   },
+
+  getAccounts: () => request<any[]>('/accounts'),
+
+  createAccount: (payload: CreateAccountPayload) =>
+    request<AccountRecord>('/accounts', { method: 'POST', body: JSON.stringify(payload) }),
+
+  createAccount: (payload: CreateAccountPayload) => request('/accounts', { method: 'POST', body: JSON.stringify(payload) }),
+
+
   runInviteCampaign: () => request<{ total: number; eligible: number; queued: number; skipped: number }>('/campaigns/invite', { method: 'POST', body: JSON.stringify({}) })
 };
