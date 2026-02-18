@@ -1,4 +1,5 @@
 import Constants from 'expo-constants';
+import { Contact, ContactState } from '../types';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? Constants.expoConfig?.extra?.apiBaseUrl;
 
@@ -13,7 +14,11 @@ interface CreateAccountPayload {
 }
 
 
+export interface AccountRecord {
+
+
 interface AccountRecord {
+
   id: string;
   user_id: string;
   platform: Platform;
@@ -26,6 +31,15 @@ interface AccountRecord {
   created_at: string;
   updated_at: string;
 }
+
+
+interface ApiContact {
+  id: string;
+  display_name: string | null;
+  platform_contact_id: string;
+  state: ContactState;
+}
+
 
 
 const request = async <T>(path: string, options?: RequestInit): Promise<T> => {
@@ -45,12 +59,26 @@ const request = async <T>(path: string, options?: RequestInit): Promise<T> => {
 };
 
 export const api = {
+
+  getAccounts: () => request<AccountRecord[]>('/accounts'),
+  createAccount: (payload: CreateAccountPayload) => request<AccountRecord>('/accounts', { method: 'POST', body: JSON.stringify(payload) }),
+  getContacts: async (): Promise<Contact[]> => {
+    const contacts = await request<ApiContact[]>('/contacts');
+    return contacts.map((contact) => ({
+      id: contact.id,
+      display_name: contact.display_name ?? 'Unknown contact',
+      platform_contact_id: contact.platform_contact_id,
+      state: contact.state
+    }));
+  },
+
   getAccounts: () => request<any[]>('/accounts'),
 
   createAccount: (payload: CreateAccountPayload) =>
     request<AccountRecord>('/accounts', { method: 'POST', body: JSON.stringify(payload) }),
 
   createAccount: (payload: CreateAccountPayload) => request('/accounts', { method: 'POST', body: JSON.stringify(payload) }),
+
 
   runInviteCampaign: () => request<{ total: number; eligible: number; queued: number; skipped: number }>('/campaigns/invite', { method: 'POST', body: JSON.stringify({}) })
 };

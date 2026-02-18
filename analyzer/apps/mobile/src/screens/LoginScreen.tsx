@@ -1,8 +1,18 @@
-import { Alert, Button, ScrollView, Text, TextInput, View } from 'react-native';
+import { Alert, StyleSheet, Text } from 'react-native';
 import { useState } from 'react';
 import { api } from '../services/api';
 
+import { AppButton } from '../components/ui/AppButton';
+import { AppCard } from '../components/ui/AppCard';
+import { AppInput } from '../components/ui/AppInput';
+import { AppScreen } from '../components/ui/AppScreen';
+import { colors, spacing } from '../theme/tokens';
+
 const uuidHint = '00000000-0000-0000-0000-000000000000';
+
+
+const uuidHint = '00000000-0000-0000-0000-000000000000';
+
 
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -21,11 +31,16 @@ export const LoginScreen = () => {
     const normalizedUserId = userId.trim();
     if (!normalizedUserId) {
 
+
+    const normalizedUserId = userId.trim();
+    if (!normalizedUserId) {
+
     if (!userId.trim()) {
 
       Alert.alert('Missing user ID', 'Please paste a valid user UUID before saving tokens.');
       return;
     }
+
 
 
     if (!uuidRegex.test(normalizedUserId)) {
@@ -49,7 +64,29 @@ export const LoginScreen = () => {
     if (hasTikTokInput && !tiktokAccountId.trim()) {
       Alert.alert('Missing TikTok account ID', 'Please provide the TikTok account ID before saving.');
       return;
+  
+
+    const tasks: Array<Promise<unknown>> = [];
+
+    if (hasInstagramInput) {
+      tasks.push(
+        api.createAccount({
+          user_id: normalizedUserId,
+          platform: 'instagram',
+          platform_account_id: instagramAccountId.trim(),
+          username: instagramUsername.trim() || undefined,
+          access_token: instagramToken.trim() || undefined
+        })
+      );
     }
+
+    if (hasTikTokInput) {
+      tasks.push(
+        api.createAccount({
+          user_id: normalizedUserId,
+          platform: 'tiktok',
+          platform_account_id: tiktokAccountId.trim(),
+
 
     const tasks: Array<Promise<unknown>> = [];
 
@@ -99,16 +136,19 @@ export const LoginScreen = () => {
           user_id: userId.trim(),
           platform: 'tiktok',
           platform_account_id: tiktokAccountId.trim() || tiktokUsername.trim() || `tt-${Date.now()}`,
+
           username: tiktokUsername.trim() || undefined,
           access_token: tiktokToken.trim() || undefined
         })
       );
     }
 
+
     if (tasks.length === 0) {
       Alert.alert('Nothing to save', 'Enter at least one account ID or token.');
       return;
     }
+
 
     setSaving(true);
     try {
@@ -123,6 +163,30 @@ export const LoginScreen = () => {
   };
 
   return (
+
+    <AppScreen title="Connect accounts" scroll>
+      <Text style={styles.helper}>OAuth buttons are placeholders for now. Save tokens manually for MVP testing.</Text>
+      <AppInput value={userId} onChangeText={setUserId} placeholder={`User UUID (${uuidHint})`} autoCapitalize="none" />
+
+      <AppCard>
+        <Text style={styles.sectionTitle}>Instagram</Text>
+        <AppButton title="Connect Instagram (placeholder)" variant="secondary" onPress={() => Alert.alert('Instagram OAuth', 'Placeholder action')} />
+        <AppInput value={instagramAccountId} onChangeText={setInstagramAccountId} placeholder="Instagram account ID" autoCapitalize="none" />
+        <AppInput value={instagramUsername} onChangeText={setInstagramUsername} placeholder="Instagram username (optional)" autoCapitalize="none" />
+        <AppInput value={instagramToken} onChangeText={setInstagramToken} placeholder="Paste Instagram access token" autoCapitalize="none" />
+      </AppCard>
+
+      <AppCard>
+        <Text style={styles.sectionTitle}>TikTok</Text>
+        <AppButton title="Connect TikTok (placeholder)" variant="secondary" onPress={() => Alert.alert('TikTok OAuth', 'Placeholder action')} />
+        <AppInput value={tiktokAccountId} onChangeText={setTiktokAccountId} placeholder="TikTok account ID" autoCapitalize="none" />
+        <AppInput value={tiktokUsername} onChangeText={setTiktokUsername} placeholder="TikTok username (optional)" autoCapitalize="none" />
+        <AppInput value={tiktokToken} onChangeText={setTiktokToken} placeholder="Paste TikTok access token" autoCapitalize="none" />
+      </AppCard>
+
+      <AppButton title={saving ? 'Saving...' : 'Save tokens'} disabled={saving} onPress={() => void onSaveTokens()} />
+    </AppScreen>
+
     <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
       <Text style={{ fontSize: 24, fontWeight: '700' }}>Connect accounts</Text>
       <Text style={{ color: '#6B7280' }}>Use OAuth placeholders for now, then paste access tokens manually for MVP testing.</Text>
@@ -185,5 +249,18 @@ export const LoginScreen = () => {
         <Button title={saving ? 'Saving...' : 'Save tokens'} disabled={saving} onPress={() => void onSaveTokens()} />
       </View>
     </ScrollView>
+
   );
 };
+
+const styles = StyleSheet.create({
+  helper: {
+    color: colors.textSecondary,
+    marginBottom: spacing.xs
+  },
+  sectionTitle: {
+    color: colors.textPrimary,
+    fontWeight: '800',
+    marginBottom: spacing.xs
+  }
+});
